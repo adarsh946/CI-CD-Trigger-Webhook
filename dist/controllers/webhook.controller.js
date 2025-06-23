@@ -1,11 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.webhookHandler = void 0;
 const platformDetection_1 = require("../utils/platformDetection");
 const verification_1 = require("../utils/verification");
 const pipelineService_1 = require("../services/pipelineService");
+const webhookEvent_1 = __importDefault(require("../models/webhookEvent"));
 const AllEvents = ["push", "pull_request", "merge_request"];
-const webhookHandler = (req, res) => {
+const webhookHandler = async (req, res) => {
     const platform = (0, platformDetection_1.detectPlatform)(req.headers);
     if (!platform) {
         return res.status(400).json({
@@ -24,17 +28,23 @@ const webhookHandler = (req, res) => {
         return res.status(401).send("❌ Unauthorized webhook");
     }
     const reporitoryName = req.body.repository?.full_name || req.body.project?.name;
+    await webhookEvent_1.default.create({
+        platform,
+        eventType,
+        payload: req.body,
+    });
     // Loging payload
     console.log("✅ Valid event payload:", {
         reporitoryName,
         eventType,
         platform,
     });
-    const pipeline = (0, pipelineService_1.triggerPipeline)({ repository: reporitoryName, eventType });
+    const pipeline = await (0, pipelineService_1.triggerPipeline)({
+        repository: reporitoryName,
+        eventType,
+    });
     // later trigger pipeline here
-    res
-        .status(200)
-        .json({
+    res.status(200).json({
         message: "Webhook event accepted",
         pipelineId: pipeline.id,
         pipelineStatus: pipeline.status,

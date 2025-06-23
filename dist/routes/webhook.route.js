@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const webhook_controller_1 = require("../controllers/webhook.controller");
+const statusAndEvent_controller_1 = require("../controllers/statusAndEvent.controller");
 const router = (0, express_1.Router)();
 router.post("/webhook", webhook_controller_1.webhookHandler);
+router.get("/webhook/pipelines", statusAndEvent_controller_1.getPipelines);
+router.get("/webhook/events", statusAndEvent_controller_1.getWebhookEvents);
 exports.default = router;

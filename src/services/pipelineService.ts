@@ -1,44 +1,31 @@
-import { v4 as uuidv4 } from "uuid";
+import { PipelineRun, IPipelineRun } from "../models/pipelineRun"; // Assuming you have exported types
+import { Document } from "mongoose";
 
-type Pipeline = {
-  id: string;
+interface TriggerPipelineInput {
   repository: string;
   eventType: string;
-  status: "pending" | "success";
-  createdAt: Date;
-  completedAt?: Date;
-};
+}
 
-// Simulated in-memory storage
-const pipelineRuns: Pipeline[] = [];
-
-// Function to trigger a pipeline
-export const triggerPipeline = (eventData: {
-  repository: string;
-  eventType: string;
-}) => {
-  const id = uuidv4();
-
-  const run: Pipeline = {
-    id,
-    repository: eventData.repository,
-    eventType: eventData.eventType,
+export const triggerPipeline = async ({
+  repository,
+  eventType,
+}: TriggerPipelineInput): Promise<IPipelineRun & Document> => {
+  const run = new PipelineRun({
+    repository,
+    eventType,
     status: "pending",
-    createdAt: new Date(),
-  };
+  });
 
-  pipelineRuns.push(run);
-  console.log(`🚀 Pipeline triggered: ${id} for ${run.repository}`);
+  await run.save();
+  console.log(`🚀 Pipeline triggered: ${run._id} for ${repository}`);
 
-  // Simulate async pipeline completion
-  setTimeout(() => {
+  // Simulate build
+  setTimeout(async () => {
     run.status = "success";
     run.completedAt = new Date();
-    console.log(`✅ Pipeline completed: ${id}`);
+    await run.save();
+    console.log(`✅ Pipeline completed: ${run._id}`);
   }, 5000);
 
   return run;
 };
-
-// Function to get all pipeline runs
-export const getPipelines = (): Pipeline[] => pipelineRuns;

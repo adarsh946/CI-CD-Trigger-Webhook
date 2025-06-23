@@ -1,0 +1,115 @@
+openapi: 3.0.0
+info:
+  title: CI/CD Trigger Webhook API
+  description: Backend service to listen to code events and trigger CI/CD pipelines
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /webhook:
+    post:
+      summary: Receive webhook and trigger CI/CD pipeline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                repository:
+                  full_name: adarsh/webhook-test
+                ref: refs/heads/main
+                head_commit:
+                  id: abc123
+                  message: Initial commit
+      parameters:
+        - name: X-GitHub-Event
+          in: header
+          required: true
+          schema:
+            type: string
+          example: push
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          schema:
+            type: string
+          example: sha256=abc123...
+      responses:
+        "200":
+          description: Webhook accepted and pipeline triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  pipelineId:
+                    type: string
+                  status:
+                    type: string
+        "401":
+          description: Invalid signature or unauthorized
+        "204":
+          description: Ignored event
+        "500":
+          description: Server error
+
+  /webhook/pipelines:
+    get:
+      summary: Get all recent pipeline runs
+      responses:
+        "200":
+          description: List of pipelines
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  pipelines:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        repository:
+                          type: string
+                        eventType:
+                          type: string
+                        status:
+                          type: string
+                        createdAt:
+                          type: string
+                        completedAt:
+                          type: string
+
+  /webhook/events:
+    get:
+      summary: Get recent webhook events (raw logs)
+      responses:
+        "200":
+          description: Webhook events list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        platform:
+                          type: string
+                        eventType:
+                          type: string
+                        payload:
+                          type: object
+                        receivedAt:
+                          type: string

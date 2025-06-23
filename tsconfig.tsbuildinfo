@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/controllers/webhook.controller.ts","./src/routes/webhook.route.ts","./src/services/pipelineservice.ts","./src/utils/platformdetection.ts","./src/utils/verification.ts"],"version":"5.8.3"}
+{"root":["./src/index.ts","./src/config/db.ts","./src/controllers/statusandevent.controller.ts","./src/controllers/webhook.controller.ts","./src/models/pipelinerun.ts","./src/models/webhookevent.ts","./src/routes/webhook.route.ts","./src/services/pipelineservice.ts","./src/utils/platformdetection.ts","./src/utils/verification.ts"],"version":"5.8.3"}

@@ -2,10 +2,11 @@ import { Request } from "express";
 import { detectPlatform } from "../utils/platformDetection";
 import { verifyGithubSign, verifyGitLabToken } from "../utils/verification";
 import { triggerPipeline } from "../services/pipelineService";
+import WebhookEvent from "../models/webhookEvent";
 
 const AllEvents = ["push", "pull_request", "merge_request"];
 
-export const webhookHandler = (req: any, res: any) => {
+export const webhookHandler = async (req: any, res: any) => {
   const platform = detectPlatform(req.headers);
 
   if (!platform) {
@@ -31,22 +32,28 @@ export const webhookHandler = (req: any, res: any) => {
   const reporitoryName =
     req.body.repository?.full_name || req.body.project?.name;
 
+  await WebhookEvent.create({
+    platform,
+    eventType,
+    payload: req.body,
+  });
   // Loging payload
   console.log("✅ Valid event payload:", {
     reporitoryName,
     eventType,
     platform,
   });
-  const pipeline = triggerPipeline({ repository: reporitoryName, eventType });
+  const pipeline = await triggerPipeline({
+    repository: reporitoryName,
+    eventType,
+  });
 
   // later trigger pipeline here
-  res
-    .status(200)
-    .json({
-      message: "Webhook event accepted",
-      pipelineId: pipeline.id,
-      pipelineStatus: pipeline.status,
-    });
+  res.status(200).json({
+    message: "Webhook event accepted",
+    pipelineId: pipeline.id,
+    pipelineStatus: pipeline.status,
+  });
 };
 
 const getEventType = (platform: any, req: Request) => {

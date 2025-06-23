@@ -8,8 +8,17 @@ export const verifyGithubSign = (req: any, secret: string) => {
 
   const hmac = crypto.createHmac("sha256", secret);
   console.log(hmac);
-  const digest = hmac.update(JSON.stringify(req.body)).digest("hex");
+  const digest =
+    "sha256=" + hmac.update(JSON.stringify(req.body)).digest("hex");
   console.log(digest);
+
+  const sigBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(digest);
+
+  // Check lengths BEFORE using timingSafeEqual
+  if (sigBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
 
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
 };
