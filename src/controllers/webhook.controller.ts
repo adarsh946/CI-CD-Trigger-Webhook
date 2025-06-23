@@ -1,5 +1,7 @@
 import { Request } from "express";
 import { detectPlatform } from "../utils/platformDetection";
+import { verifyGithubSign, verifyGitLabToken } from "../utils/verification";
+import { triggerPipeline } from "../services/pipelineService";
 
 const AllEvents = ["push", "pull_request", "merge_request"];
 
@@ -13,7 +15,7 @@ export const webhookHandler = (req: any, res: any) => {
   }
 
   const eventType = getEventType(platform, req) as string;
-  console.log(`webhook recived from ${platform} - Event: {eventType}`);
+  console.log(`webhook recived from ${platform} - Event: ${eventType}`);
 
   if (!AllEvents.includes(eventType)) {
     return res.status(404).json({
@@ -21,19 +23,45 @@ export const webhookHandler = (req: any, res: any) => {
     });
   }
 
+  const isAuthenticated = requestVerification(platform, req);
+  if (!isAuthenticated) {
+    return res.status(401).send("❌ Unauthorized webhook");
+  }
+
+  const reporitoryName =
+    req.body.repository?.full_name || req.body.project?.name;
+
   // Loging payload
   console.log("✅ Valid event payload:", {
-    repository: req.body.repository?.full_name || req.body.project?.name,
+    reporitoryName,
     eventType,
     platform,
   });
+  const pipeline = triggerPipeline({ repository: reporitoryName, eventType });
 
   // later trigger pipeline here
-  res.status(200).json({ message: "Webhook event accepted" });
+  res
+    .status(200)
+    .json({
+      message: "Webhook event accepted",
+      pipelineId: pipeline.id,
+      pipelineStatus: pipeline.status,
+    });
 };
 
 const getEventType = (platform: any, req: Request) => {
   if (platform == "github") return req.headers["x-github-event"];
   else if (platform == "gitlab") return req.headers.object_kind;
   else return "unknown";
+};
+
+const requestVerification = (platform: any, req: Request) => {
+  switch (platform) {
+    case "github":
+      return verifyGithubSign(req, process.env.GITHUB_SECRET!);
+    case "gitlab":
+      return verifyGitLabToken(req, process.env.GITLAB_SECRET!);
+    default:
+      return false;
+  }
 };
