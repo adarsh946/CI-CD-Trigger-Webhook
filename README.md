@@ -22,8 +22,8 @@ A backend-only Node.js service that listens for webhook events from GitHub and G
 ## 🔧 Installation
 
 ```bash
-git clone https://github.com/your-username/ci-cd-webhook
-cd ci-cd-webhook
+git clone https://github.com/your-username/CI-CD-Trigger-Webhook
+cd CI-CD-Trigger-Webhook
 npm install
 ```
 
