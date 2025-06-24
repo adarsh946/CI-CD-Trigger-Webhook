@@ -58,7 +58,7 @@ export const webhookHandler = async (req: any, res: any) => {
 
 const getEventType = (platform: any, req: Request) => {
   if (platform == "github") return req.headers["x-github-event"];
-  else if (platform == "gitlab") return req.headers.object_kind;
+  else if (platform == "gitlab") return req.body.object_kind;
   else return "unknown";
 };
 

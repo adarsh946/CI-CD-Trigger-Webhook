@@ -55,7 +55,7 @@ const getEventType = (platform, req) => {
     if (platform == "github")
         return req.headers["x-github-event"];
     else if (platform == "gitlab")
-        return req.headers.object_kind;
+        return req.body.object_kind;
     else
         return "unknown";
 };
